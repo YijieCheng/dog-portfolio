@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分类 — 文旅影像作品集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<style>
+  html,body{height:100%;overflow:hidden;}
+  .cat-hero{position:relative;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+  .cat-hero .media,.cat-hero .media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;}
+  .cat-hero .orb{left:62%;top:28%;}
+  .cat-hero .scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(8,8,10,.38),rgba(8,8,10,.16) 45%,rgba(8,8,10,.82));}
+  .cat-hero-inner{position:relative;z-index:3;width:100%;padding-top:104px;}
+  .cat-hero .no{font-family:var(--f-mono);font-size:48px;font-weight:300;letter-spacing:-.02em;line-height:1;color:var(--accent);
+    opacity:0;animation:fadeSlideUp .9s cubic-bezier(.16,1,.3,1) .1s forwards;}
+  .cat-hero .cn{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;margin-top:4px;
+    opacity:0;animation:fadeSlideUp .9s cubic-bezier(.16,1,.3,1) .2s forwards;}
+  .cat-hero .en{font-family:var(--f-mono);font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:10px;
+    opacity:0;animation:fadeSlideUp .9s cubic-bezier(.16,1,.3,1) .3s forwards;}
+  .cat-hero .desc{font-size:14px;color:var(--muted);max-width:560px;margin-top:14px;line-height:1.75;
+    opacity:0;animation:fadeSlideUp .9s cubic-bezier(.16,1,.3,1) .4s forwards;}
+  /* ── 分类作品 coverflow 轮播（与标题同屏）── */
+  .cat-hero .stage-wrap{position:relative;z-index:3;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+    padding:12px 0 20px;}
+  .cat-hero .stage{height:clamp(300px,44vh,480px);}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo"><a href="index.html" data-hover>ARCHIVE<span class="dot-accent">.</span></a></div>
+  <nav><ul>
+    <li><a id="navWorks" href="works.html#video" data-hover>Works</a></li>
+    <li><a href="#" data-hover>About</a></li>
+    <li><a href="#" data-hover>Journal</a></li>
+    <li><a href="index.html" data-hover>← Home</a></li>
+  </ul></nav>
+  <span class="menu-ico" data-hover>≡</span>
+</header>
+
+<section class="cat-hero">
+  <div class="media ph"><img data-fallback id="catPhoto" src="" alt=""></div>
+  <div class="orb" id="orb"></div>
+  <div class="scrim"></div>
+  <div class="cat-hero-inner"><div class="wrap">
+    <div class="no" id="catNo">02</div>
+    <div class="cn" id="catCn">创意宣传</div>
+    <div class="en" id="catEn">CREATIVE CAMPAIGN</div>
+    <div class="desc" id="catDesc"></div>
+  </div></div>
+  <div class="stage-wrap"><div class="stage" id="stage"><div class="track" id="track"></div></div></div>
+</section>
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script>
+function render(key){
+  var c=CATS[key]||CATS.creative;
+  document.title=c.cn+' — 文旅影像作品集';
+  var ph=document.getElementById('catPhoto');ph.style.display='block';ph.src=imgURL(c.cover,1920,1080,c.no);
+  document.getElementById('catNo').textContent=c.no;
+  document.getElementById('catCn').textContent=c.cn;
+  document.getElementById('catEn').textContent=c.en;
+  document.getElementById('catDesc').textContent=c.desc;
+  document.getElementById('navWorks').href='works.html#'+c.group;
+  var isPhoto=c.group==='photo';
+
+  // 该分类作品 → 3D 旋转 + coverflow 轮播（摄影/摄像共用）
+  var items=c.projects.map(function(p,i){
+    return {
+      img:imgURL(p.kw,600,800,(c.no*10)+i),
+      top:p.year+' · '+p.type,
+      no:('0'+(i+1)).slice(-2),
+      cn:p.cn, en:p.en, dur:p.dur, play:!isPhoto,
+      go:isPhoto?'View Gallery →':'View Project →',
+      href:'project.html#'+c.key+'/'+p.id
+    };
+  });
+  initCoverflow({stage:document.getElementById('stage'),items:items});
+}
+function current(){return location.hash.replace('#','')||'creative';}
+// 切换分类时整页重载，确保 coverflow 干净重建
+addEventListener('hashchange',function(){location.reload();});
+render(current());
+initOrb(document.getElementById('orb'));
+</script>
+</body>
+</html>

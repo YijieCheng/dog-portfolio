@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCHIVE — 文旅影像作品集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<style>
+  /* ── Loader ── */
+  #loader{position:fixed;inset:0;z-index:10000;background:#08080a;display:flex;align-items:center;justify-content:center;
+    transition:opacity .6s ease,visibility .6s ease;}
+  #loader.hide{opacity:0;visibility:hidden;pointer-events:none;}
+  #rainCanvas{position:absolute;inset:0;z-index:0;}
+  .loader-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .loader-percent{font-size:clamp(3rem,8vw,5.5rem);font-weight:700;letter-spacing:-.04em;color:#fff;text-shadow:0 0 40px rgba(120,80,220,.35);}
+  .loader-bar-wrap{width:130px;height:2px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden;}
+  .loader-bar{height:100%;width:0;background:linear-gradient(90deg,#6c30d2,#a882ff);border-radius:1px;transition:width .05s linear;}
+  .loader-label{font-family:var(--f-mono);font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:rgba(255,255,255,.32);}
+
+  /* ── Hero 背景视频（自动循环）+ 右侧辉光球 ── */
+  .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:0;pointer-events:none;
+    opacity:0;animation:fadeIn 1.4s .2s ease forwards;}
+  .hero .scrim{z-index:1;background:
+    linear-gradient(105deg,rgba(8,8,10,.86) 0%,rgba(8,8,10,.55) 34%,rgba(8,8,10,.22) 62%,rgba(8,8,10,.42) 100%),
+    linear-gradient(to bottom,rgba(8,8,10,.22) 0%,transparent 30%,rgba(8,8,10,.6) 100%);}
+  .hero .orb{z-index:2;right:8%;top:50%;width:min(600px,80vw);height:min(600px,80vw);
+    filter:blur(42px);translate:0 -50%;
+    animation:orbBreath 12s ease-in-out infinite, orbSpin 44s linear infinite, orbIn 1.6s .3s ease forwards;}
+  /* 轻呼吸（translate+scale）与慢自转（rotate）用独立属性，互不覆盖 */
+  @keyframes orbBreath{
+    0%,100%{translate:0 -50%;        scale:1;}
+    50%    {translate:0 calc(-50% - 12px); scale:1.04;}
+  }
+  @keyframes orbSpin{to{rotate:360deg;}}
+  .hero .hero-text{max-width:none;margin:0;padding-left:6vw;padding-right:var(--gutter);}
+  .hero .tags{position:static;left:auto;right:auto;bottom:auto;margin-top:26px;justify-content:flex-start;}
+  .page-reveal{opacity:0;transition:opacity .6s ease .15s;}
+  .page-reveal.show{opacity:1;}
+  .hero-line:hover{letter-spacing:.06em;color:var(--accent);}
+  .tag:hover{letter-spacing:.28em;color:var(--accent);border-color:rgba(168,130,255,.4);}
+
+  /* ── 整屏吸附滚动（一屏一屏）── */
+  html{scroll-snap-type:y mandatory;scroll-padding-top:0;}
+  .hero{scroll-snap-align:start;scroll-snap-stop:always;}
+  .snap-screen.last{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;
+    scroll-snap-align:start;scroll-snap-stop:always;}
+  .snap-screen.last > footer{margin-top:auto;}
+  @media (prefers-reduced-motion:reduce){html{scroll-snap-type:none;}}
+</style>
+</head>
+<body>
+
+<!-- ════ LOADER ════ -->
+<div id="loader">
+  <canvas id="rainCanvas"></canvas>
+  <div class="loader-content">
+    <div class="loader-percent" id="loaderPercent">0%</div>
+    <div class="loader-bar-wrap"><div class="loader-bar" id="loaderBar"></div></div>
+    <div class="loader-label">ARCHIVE · 文旅影像作品集</div>
+  </div>
+</div>
+
+<!-- ════ HEADER ════ -->
+<header class="site-header">
+  <div class="logo">ARCHIVE<span class="dot-accent">.</span></div>
+  <nav>
+    <ul>
+      <li><a href="works.html#video" data-hover>Works</a></li>
+      <li><a href="#" data-hover>About</a></li>
+      <li><a href="#" data-hover>Journal</a></li>
+      <li><a href="#" data-hover>Contact</a></li>
+    </ul>
+  </nav>
+  <span class="menu-ico" data-hover>≡</span>
+</header>
+
+<div class="page-reveal" id="pageReveal">
+
+<!-- ════ HERO ════ -->
+<section class="hero">
+  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" src="assets/new-bg.mp4"></video>
+  <div class="scrim"></div>
+  <div class="orb" id="orb"></div>
+  <div class="hero-text">
+    <h1 class="h1">
+      <span class="hero-line" data-textline>WE</span>
+      <span class="hero-line" data-textline>CAPTURE</span>
+      <span class="hero-line" data-textline>STORIES</span>
+      <span class="hero-line" data-textline>THAT STAY</span>
+    </h1>
+    <div class="hero-sub">影像 · 创意 · 叙事 &nbsp;—&nbsp; Visual Storytelling Studio</div>
+    <div class="tags">
+      <span class="tag" data-hover data-type="photo">摄影作品</span>
+      <span class="tag" data-hover data-type="video">摄像作品</span>
+    </div>
+  </div>
+</section>
+
+</div><!-- /page-reveal -->
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script>
+/* ════ MATRIX CODE RAIN ════ */
+(function(){
+  var c=document.getElementById('rainCanvas'),ctx=c.getContext('2d');
+  var chars='ARCHIVE影像创意叙事01{}[]<>=+-*/アイウエオカキクケコサシスセソ'.split('');
+  var fs=11,step=fs*2.2,cols=0,drops=[];
+  function resize(){
+    c.width=innerWidth;c.height=innerHeight;
+    cols=Math.ceil(c.width/step);
+    for(var i=0;i<cols;i++)if(drops[i]==null)drops[i]=Math.random()*c.height/fs*-1;
+  }
+  resize();addEventListener('resize',resize);
+  ctx.fillStyle='#08080a';ctx.fillRect(0,0,c.width,c.height);
+  function draw(){
+    ctx.fillStyle='rgba(8,8,10,0.05)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px "JetBrains Mono",monospace';
+    for(var i=0;i<cols;i++){
+      var ch=chars[Math.floor(Math.random()*chars.length)],y=drops[i]*fs;
+      ctx.fillStyle='rgba(74,222,128,0.25)';ctx.fillText(ch,i*step,y);
+      if(drops[i]>1){ctx.fillStyle='rgba(34,197,94,0.12)';ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*step,y-fs);}
+      if(drops[i]>2){ctx.fillStyle='rgba(22,163,74,0.05)';ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*step,y-fs*2);}
+      if(y>c.height&&Math.random()>0.975)drops[i]=0;
+      drops[i]+=0.5;
+    }
+  }
+  for(var f=0;f<20;f++)draw();
+  var id=setInterval(draw,40);window._stopRain=function(){clearInterval(id);};
+})();
+
+/* ════ LOADER ════ */
+(function(){
+  var el=document.getElementById('loaderPercent'),bar=document.getElementById('loaderBar'),
+      loader=document.getElementById('loader'),page=document.getElementById('pageReveal');
+  function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+  var start=Date.now(),dur=2400;
+  (function tick(){
+    var t=Math.min((Date.now()-start)/dur,1),p=Math.floor(ease(t)*100);
+    el.textContent=p+'%';bar.style.width=p+'%';
+    if(p<100)requestAnimationFrame(tick);
+    else setTimeout(function(){loader.classList.add('hide');page.classList.add('show');window._stopRain();},350);
+  })();
+})();
+
+/* ════ ORB 紫→粉色彩 morph（光标靠近变粉）════ */
+initOrb(document.getElementById('orb'));
+/* 背景视频自动循环兜底（部分浏览器需 JS 触发 play）*/
+(function(){var v=document.getElementById('heroVideo');if(v&&v.play){var p=v.play();if(p&&p.catch)p.catch(function(){});}})();
+
+/* ════ HERO 标签 → 跳转到对应类型的分类列表页 ════ */
+(function(){
+  document.querySelectorAll('.tags .tag[data-type]').forEach(function(t){
+    t.style.cursor='none';
+    t.addEventListener('click',function(){location.href='works.html#'+t.dataset.type;});
+  });
+})();
+</script>
+</body>
+</html>

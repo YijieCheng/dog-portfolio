@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目 — 文旅影像作品集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<style>
+  html,body{height:100%;overflow:hidden;}
+  .player-page{position:relative;height:100dvh;overflow:hidden;background:var(--bg);}
+  .player-page .orb{left:78%;top:-6%;width:min(420px,56vw);height:min(420px,56vw);opacity:.5;}
+  .player-wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding-top:84px;padding-bottom:16px;}
+
+  /* ── 顶部信息栏 ── */
+  .player-top{flex:none;display:flex;align-items:flex-start;gap:var(--s4);padding-bottom:10px;}
+  .player-top .ptop-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0;}
+  .back-btn{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    display:inline-flex;align-items:center;gap:6px;transition:color .3s;flex:none;}
+  .back-btn:hover{color:var(--text);}
+  .ptop-title{font-size:19px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ptop-title .sub{color:var(--muted);font-weight:400;margin-left:10px;font-size:13px;font-family:var(--f-mono);letter-spacing:.06em;}
+
+  /* ── 播放舞台：占满约 80% 屏幕高度 ── */
+  .player-stage{position:relative;flex:1 1 80%;min-height:0;margin:10px 0;border-radius:14px;overflow:hidden;
+    background:#0c0c10;border:1px solid var(--border);}
+  .player-stage .p-blur{position:absolute;inset:-30px;background-size:cover;background-position:center;
+    filter:blur(46px) brightness(.55) saturate(1.1);transform:scale(1.2);opacity:0;transition:opacity .4s ease;}
+  .player-stage.is-vertical .p-blur{opacity:1;}
+  .player-stage .p-media{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;}
+  .player-stage .p-media img,.player-stage .p-media video{width:100%;height:100%;object-fit:cover;}
+  .player-stage.is-vertical .p-media img,.player-stage.is-vertical .p-media video{width:auto;height:100%;object-fit:contain;}
+  .player-stage .p-media iframe{width:100%;height:100%;border:0;}
+  .p-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;cursor:pointer;}
+  .player-stage.is-playing .p-play{display:none;}
+  .p-play .play{width:78px;height:78px;background:rgba(0,0,0,.32);border-color:rgba(255,255,255,.85);}
+  .p-play .play::after{border-left-width:20px;border-top-width:13px;border-bottom-width:13px;}
+  .p-play:hover .play{background:rgba(168,130,255,.3);border-color:transparent;transform:scale(1.06);}
+
+  /* ── 底部缩略图带 ── */
+  .thumb-strip{flex:none;display:flex;align-items:center;gap:10px;height:100px;margin-top:10px;}
+  .ts-track{flex:1;min-width:0;display:flex;gap:12px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:2px 1px;}
+  .ts-track::-webkit-scrollbar{display:none;}
+  .ts-item{flex:none;width:150px;height:96px;border-radius:8px;overflow:hidden;position:relative;
+    border:2px solid transparent;opacity:.55;transition:opacity .3s,border-color .3s,transform .3s;background:#14141a;}
+  .ts-item img{width:100%;height:100%;object-fit:cover;}
+  .ts-item::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75),transparent 55%);}
+  .ts-item .ts-no{position:absolute;left:7px;top:6px;z-index:1;font-family:var(--f-mono);font-size:9px;color:rgba(255,255,255,.75);}
+  .ts-item .ts-nm{position:absolute;left:8px;bottom:6px;right:8px;z-index:1;font-size:11px;color:#fff;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ts-item:hover{opacity:.85;}
+  .ts-item.is-active{opacity:1;border-color:var(--accent);transform:translateY(-3px);}
+  .ts-nav{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel);
+    color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;
+    transition:color .3s,border-color .3s;}
+  .ts-nav:hover{color:var(--accent);border-color:rgba(168,130,255,.5);}
+
+  @media(max-width:720px){
+    .player-wrap{padding-top:88px;}
+    .ptop-title{max-width:200px;}
+    .ts-item{width:120px;height:80px;}
+    .thumb-strip{height:88px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo"><a href="index.html" data-hover>ARCHIVE<span class="dot-accent">.</span></a></div>
+  <nav><ul>
+    <li><a id="navWorks" href="works.html#video" data-hover>Works</a></li>
+    <li><a href="#" data-hover>About</a></li>
+    <li><a href="index.html" data-hover>← Home</a></li>
+  </ul></nav>
+  <span class="menu-ico" data-hover>≡</span>
+</header>
+
+<section class="player-page">
+  <div class="orb" id="orb"></div>
+  <div class="wrap player-wrap">
+
+    <div class="player-top">
+      <div class="ptop-left">
+        <a class="back-btn" id="backLink" href="category.html" data-hover>← 返回</a>
+        <div class="ptop-title" id="ptopTitle">宁波城市宣传片<span class="sub">NINGBO CITY PROMO</span></div>
+      </div>
+    </div>
+
+    <div class="player-stage" id="stage">
+      <div class="p-blur" id="pBlur"></div>
+      <div class="p-media" id="pMedia"></div>
+    </div>
+
+    <div class="thumb-strip">
+      <button class="ts-nav" id="tsPrev" data-hover>‹</button>
+      <div class="ts-track" id="tsTrack"></div>
+      <button class="ts-nav" id="tsNext" data-hover>›</button>
+    </div>
+
+  </div>
+</section>
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script>
+function render(route){
+  var p=PROJECTS[route];
+  if(!p){p=PROJECTS['creative/ningbo-city'];route='creative/ningbo-city';}
+  var c=CATS[p.catKey];
+  var isPhoto=p.group==='photo';
+  document.title=p.cn+' — 文旅影像作品集';
+
+  var lb=(parseInt(p.catNo)*10)+p.cn.length;
+  var imgSrc=p.vertical?imgURL(p.kw,900,1600,lb):imgURL(p.kw,1600,900,lb);
+
+  document.getElementById('backLink').href='category.html#'+p.catKey;
+  var nw=document.getElementById('navWorks');if(nw&&p.group)nw.href='works.html#'+p.group;
+
+  document.getElementById('ptopTitle').innerHTML=p.cn+(p.en?'<span class="sub">'+p.en+'</span>':'');
+
+  var stage=document.getElementById('stage');
+  stage.classList.toggle('is-vertical',!!p.vertical);
+  stage.classList.remove('is-playing');
+  document.getElementById('pBlur').style.backgroundImage="url('"+imgSrc+"')";
+
+  var mediaWrap=document.getElementById('pMedia');
+  mediaWrap.innerHTML='<img data-fallback id="pImg" src="'+imgSrc+'" alt="'+p.cn+'">'+
+    (isPhoto?'':'<span class="p-play" id="playBtn" data-hover><span class="play"></span></span>');
+
+  function playVideo(){
+    stage.classList.add('is-playing');
+    if(p.bilibili){
+      mediaWrap.innerHTML='<iframe src="https://player.bilibili.com/player.html?bvid='+p.bilibili+'&page=1&high_quality=1&danmaku=0&autoplay=1" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>';
+    }else if(p.qq){
+      mediaWrap.innerHTML='<iframe src="https://v.qq.com/txp/iframe/player.html?vid='+p.qq+'&auto=1" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>';
+    }else{
+      mediaWrap.innerHTML='<video src="assets/hero-figure.mp4" autoplay muted loop playsinline controls></video>';
+    }
+  }
+  if(isPhoto){
+    mediaWrap.style.cursor='zoom-in';
+    mediaWrap.onclick=function(){window.open(imgSrc,'_blank');};
+  }else{
+    mediaWrap.style.cursor='';
+    mediaWrap.onclick=null;
+    var pb=document.getElementById('playBtn');if(pb)pb.onclick=playVideo;
+  }
+
+  // 底部缩略图：同分类其它作品，点击页面内直接切换
+  var strip=document.getElementById('tsTrack');
+  strip.innerHTML=c.projects.map(function(pp,i){
+    var thumb=imgURL(pp.kw,300,200,(c.no*10)+i);
+    return '<a class="ts-item'+(pp.id===p.id?' is-active':'')+'" href="#'+p.catKey+'/'+pp.id+'" data-hover>'+
+      '<img data-fallback src="'+thumb+'" alt="'+pp.cn+'">'+
+      '<span class="ts-no">'+('0'+(i+1)).slice(-2)+'</span>'+
+      '<span class="ts-nm">'+pp.cn+'</span></a>';
+  }).join('');
+
+  attachImgFallback();
+}
+function current(){return location.hash.replace('#','')||'creative/ningbo-city';}
+addEventListener('hashchange',function(){render(current());});
+render(current());
+initOrb(document.getElementById('orb'));
+
+document.getElementById('tsPrev').onclick=function(){document.getElementById('tsTrack').scrollBy({left:-320,behavior:'smooth'});};
+document.getElementById('tsNext').onclick=function(){document.getElementById('tsTrack').scrollBy({left:320,behavior:'smooth'});};
+</script>
+</body>
+</html>
