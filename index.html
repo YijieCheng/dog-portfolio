@@ -36,12 +36,14 @@
   }
   @keyframes orbSpin{to{rotate:360deg;}}
   .hero .hero-text{max-width:none;margin:0;padding-left:6vw;padding-right:var(--gutter);}
-  .hero .tags{position:static;left:auto;right:auto;bottom:auto;margin-top:26px;justify-content:flex-start;}
+  .hero .tags{position:static;left:auto;right:auto;bottom:auto;margin-top:34px;justify-content:flex-start;}
   .page-reveal{opacity:0;transition:opacity .6s ease .15s;}
   .page-reveal.show{opacity:1;}
   .hero-line:hover{letter-spacing:.06em;color:var(--accent);}
-  /* ── Hero 三行大标题：字号适配最长一行，保证不折行 ── */
-  .hero .h1{font-size:clamp(1.6rem,6.8vw,6rem);}
+  /* ── Hero 三行大标题：字号适配最长一行，保证不折行 ──
+     行高从 0.9 放宽到 1.12：三行短语需要呼吸感，0.9 只适合超短单词的巨字排版；
+     字距从 -.045em 放宽到 -.025em：字号变小后过紧的负字距会显得挤 */
+  .hero .h1{font-size:clamp(1.6rem,6.8vw,6rem);line-height:1.12;letter-spacing:-.025em;}
   .tag:hover{letter-spacing:.28em;color:var(--accent);border-color:rgba(168,130,255,.4);}
 
   /* ── 整屏吸附滚动（一屏一屏）── */
