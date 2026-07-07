@@ -54,10 +54,11 @@
 
   /* ── 移动端 ── */
   @media(max-width:720px){
-    .hero .hero-text{padding-left:var(--gutter);}
-    .hero-sub{font-size:11px;letter-spacing:.18em;}
-    .hero .orb{right:-16%;top:56%;}
-    .hero .tags{margin-top:22px;}
+    .hero .hero-text{padding-left:var(--gutter);padding-right:var(--gutter);margin-top:-6vh;} /* 光学居中：略偏上 */
+    .hero .h1{font-size:7.6vw;}                    /* 最长行恰好占满一行，比桌面比例更饱满 */
+    .hero .orb{right:-18%;top:54%;width:min(440px,110vw);height:min(440px,110vw);}
+    .hero .tags{margin-top:26px;gap:12px;}
+    .hero .tag{padding:12px 22px;font-size:11px;}  /* 44px 级触控目标 */
   }
 </style>
 </head>
@@ -91,7 +92,8 @@
 
 <!-- ════ HERO ════ -->
 <section class="hero">
-  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" src="assets/new-bg.mp4"></video>
+  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline webkit-playsinline x5-playsinline
+    preload="auto" poster="assets/hero-poster.jpg" src="assets/new-bg.mp4"></video>
   <div class="scrim"></div>
   <div class="orb" id="orb"></div>
   <div class="hero-text">
@@ -168,8 +170,17 @@ try{if(sessionStorage.getItem('archive-loader-seen')==='1')SKIP_LOADER=true;}cat
 
 /* ════ ORB 紫→粉色彩 morph（光标靠近变粉）════ */
 initOrb(document.getElementById('orb'));
-/* 背景视频自动循环兜底（部分浏览器需 JS 触发 play）*/
-(function(){var v=document.getElementById('heroVideo');if(v&&v.play){var p=v.play();if(p&&p.catch)p.catch(function(){});}})();
+/* 背景视频自动循环兜底：
+   微信内置浏览器要等 JSBridge 就绪、部分安卓要等首次触摸后才允许播放；
+   播放前由 poster 海报帧顶住，不再黑屏 */
+(function(){
+  var v=document.getElementById('heroVideo');if(!v||!v.play)return;
+  function tryPlay(){var p=v.play();if(p&&p.catch)p.catch(function(){});}
+  tryPlay();
+  document.addEventListener('WeixinJSBridgeReady',tryPlay,false);
+  var once=function(){tryPlay();removeEventListener('touchstart',once);};
+  addEventListener('touchstart',once,{passive:true});
+})();
 
 /* ════ HERO 标签 → 跳转到对应类型的分类列表页 ════ */
 (function(){
