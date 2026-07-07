@@ -39,8 +39,11 @@
   .player-stage.is-vertical .p-media img,.player-stage.is-vertical .p-media video{width:auto;height:100%;object-fit:contain;}
   .player-stage .p-media iframe{width:100%;height:100%;border:0;}
   .player-stage.is-vertical .p-media iframe{width:auto;height:100%;aspect-ratio:9/16;max-width:100%;}
-  /* 抖音横向片：播放器恒为竖屏 9:16，把中间的横向画面放大铺满、裁掉上下黑边与 UI */
-  .player-stage.is-dycrop .p-media iframe{width:100%;height:auto;aspect-ratio:9/16;max-width:none;}
+  /* 抖音横向片：播放器恒为竖屏 9:16，具体尺寸由 JS 按舞台比例计算（画面带完整收进舞台，不裁字幕） */
+  .player-stage.is-dycrop .p-media iframe{flex:none;}
+  /* 播放中：完整画面优先，不裁切（横竖屏视频通用），底衬毛玻璃 */
+  .player-stage.is-playing .p-media video{object-fit:contain;}
+  .player-stage.is-playing .p-blur{opacity:1;}
   .p-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;cursor:pointer;}
   .player-stage.is-playing .p-play{display:none;}
   .p-play .play{width:78px;height:78px;background:rgba(0,0,0,.32);border-color:rgba(255,255,255,.85);}
@@ -75,8 +78,6 @@
     .player-stage.is-horizontal .p-media img,
     .player-stage.is-horizontal .p-media video{object-fit:contain;}
     .player-stage.is-horizontal .p-blur{opacity:1;}
-    /* 抖音横向片不再放大裁切：露出播放器自带控件（含其全屏键） */
-    .player-stage.is-dycrop .p-media iframe{width:100%;height:100%;aspect-ratio:auto;}
     .fs-btn{padding:7px 13px;font-size:10px;}
     .ptop-title{max-width:none;min-width:0;font-size:16px;}
     .ptop-title .sub{display:none;}          /* 英文副题小屏必溢出 */
@@ -91,8 +92,6 @@
     .player-stage.is-horizontal .p-media img,
     .player-stage.is-horizontal .p-media video{object-fit:contain;}
     .player-stage.is-horizontal .p-blur{opacity:1;}
-    /* 抖音竖屏播放器改为按舞台高度定尺寸：16:9 画面带恰好填满高度（310% ≈ (16/9)² 留 2% 余量），两侧衬毛玻璃 */
-    .player-stage.is-dycrop .p-media iframe{width:auto;height:310%;aspect-ratio:9/16;max-width:none;}
   }
   /* 手机横屏（矮屏）：观影优先，收起缩略图带给画面让高度 */
   @media (orientation:landscape) and (hover:none) and (max-height:500px){
@@ -206,9 +205,11 @@ function render(route){
     }else if(p.qq){
       mediaWrap.innerHTML='<iframe src="https://v.qq.com/txp/iframe/player.html?vid='+p.qq+'&auto=1&defn=shd" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>';
     }else if(p.douyin){
-      /* 抖音竖屏播放器：横向片(非 vertical)时放大裁切，让横画面铺满舞台 */
+      /* 抖音竖屏播放器：横向片(非 vertical)按舞台比例定尺寸，画面带完整显示（不裁字幕） */
       if(!p.vertical) stage.classList.add('is-dycrop');
+      stage.dataset.ratio=p.ratio||'';
       mediaWrap.innerHTML='<iframe src="https://open.douyin.com/player/video?vid='+p.douyin+'&autoplay=1" scrolling="no" frameborder="0" allow="fullscreen" allowfullscreen="true"></iframe>';
+      fitDycrop();
     }else{
       mediaWrap.innerHTML='<video src="assets/hero-figure.mp4" autoplay muted loop playsinline controls></video>';
     }
@@ -266,6 +267,23 @@ function current(){return location.hash.replace('#','')||'creative/ningbo-city';
 addEventListener('hashchange',function(){render(current());});
 render(current());
 initOrb(document.getElementById('orb'));
+
+/* ── 抖音横向片尺寸计算：9:16 播放器中间的画面带完整收进舞台 ──
+   带高 = 播放器宽 ÷ 画幅，故 播放器宽 = min(舞台宽, 舞台高 × 画幅 × 0.97)。
+   画幅保守假设 16:10（=1.6）：实际更宽的片（16:9、2:1）只会余量更多，绝不裁；
+   个别特殊画幅可在 data.js 该作品上加 ratio 字段覆盖（如 ratio:1.78）。 */
+function fitDycrop(){
+  var stage=document.getElementById('stage');
+  if(!stage.classList.contains('is-dycrop'))return;
+  var f=document.getElementById('pMedia').querySelector('iframe');
+  if(!f)return;
+  var rect=stage.getBoundingClientRect();
+  var ratio=parseFloat(stage.dataset.ratio)||1.6;
+  var w=Math.min(rect.width, rect.height*ratio*0.97);
+  f.style.width=w+'px';
+  f.style.height=(w*16/9)+'px';
+}
+addEventListener('resize',fitDycrop);   /* 旋转屏幕 / 进出全屏时重算 */
 
 /* 退出全屏时解除横屏锁定 */
 document.addEventListener('fullscreenchange',function(){
