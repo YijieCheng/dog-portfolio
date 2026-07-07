@@ -18,10 +18,14 @@ function initCursor(){
   const ring=document.createElement('div'); ring.className='cursor-ring';
   document.body.appendChild(ring);
 
-  let mx=innerWidth/2,my=innerHeight/2;
+  let mx=innerWidth/2,my=innerHeight/2,seen=false;
+  // 初始定位到视口中心并隐藏：页面刷新后鼠标未动时，圆点不再卡在左上角闪烁
+  ring.style.transform='translate(-50%,-50%) translate3d('+mx+'px,'+my+'px,0)';
+  ring.style.opacity='0';
   // 直接跟随，无缓动延迟；仅用 transform 定位（合成层，跟手）
   window.addEventListener('mousemove',e=>{
     mx=e.clientX;my=e.clientY;
+    if(!seen){seen=true;ring.style.opacity='1';}
     ring.style.transform='translate(-50%,-50%) translate3d('+mx+'px,'+my+'px,0)';
   },{passive:true});
 
@@ -35,7 +39,7 @@ function initCursor(){
     return false;
   }
   (function loop(){
-    if(!window._cursorGrab){
+    if(seen&&!window._cursorGrab){
       const el=document.elementFromPoint(mx,my);
       ring.classList.toggle('expand', !!(el&&hoverable(el)));
     }
@@ -48,7 +52,7 @@ function initCursor(){
     if(on) ring.classList.remove('expand');
   };
   document.addEventListener('mouseleave',()=>{ring.style.opacity='0';});
-  document.addEventListener('mouseenter',()=>{ring.style.opacity='1';});
+  document.addEventListener('mouseenter',()=>{if(seen)ring.style.opacity='1';});
 
   /* iframe/video 会吞掉 mousemove，自定义光标会卡在边缘：
      进入时隐藏自定义光标（恢复原生），离开时再显示。

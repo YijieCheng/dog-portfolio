@@ -168,6 +168,7 @@ function render(route){
   stage.classList.toggle('is-vertical',!!p.vertical);
   stage.classList.toggle('is-horizontal',!p.vertical);
   stage.classList.remove('is-playing','is-dycrop');
+  fitStage();
   document.getElementById('pBlur').style.backgroundImage="url('"+imgSrc+"')";
 
   var mediaWrap=document.getElementById('pMedia');
@@ -268,6 +269,23 @@ addEventListener('hashchange',function(){render(current());});
 render(current());
 initOrb(document.getElementById('orb'));
 
+/* ── 横屏作品：播放舞台固定 16:9，在可用空间内取最大并居中 ── */
+function fitStage(){
+  var stage=document.getElementById('stage');
+  if(document.fullscreenElement===stage)return;   /* 全屏时交给全屏布局 */
+  /* 先还原弹性尺寸量出可用空间 */
+  stage.style.width=stage.style.height=stage.style.flex='';
+  stage.style.marginLeft=stage.style.marginRight=stage.style.marginTop=stage.style.marginBottom='';
+  if(!stage.classList.contains('is-horizontal'))return;   /* 竖屏作品维持原布局 */
+  var r=stage.getBoundingClientRect();
+  var w=Math.min(r.width, r.height*16/9);
+  stage.style.flex='0 0 auto';
+  stage.style.width=w+'px';
+  stage.style.height=(w*9/16)+'px';
+  stage.style.marginLeft='auto';stage.style.marginRight='auto';
+  stage.style.marginTop='auto';stage.style.marginBottom='auto';  /* 剩余空间上下均分 */
+}
+
 /* ── 抖音横向片尺寸计算：9:16 播放器中间的画面带完整收进舞台 ──
    带高 = 播放器宽 ÷ 画幅，故 播放器宽 = min(舞台宽, 舞台高 × 画幅 × 0.97)。
    画幅保守假设 16:10（=1.6）：实际更宽的片（16:9、2:1）只会余量更多，绝不裁；
@@ -283,12 +301,18 @@ function fitDycrop(){
   f.style.width=w+'px';
   f.style.height=(w*16/9)+'px';
 }
-addEventListener('resize',fitDycrop);   /* 旋转屏幕 / 进出全屏时重算 */
+addEventListener('resize',function(){fitStage();fitDycrop();});   /* 旋转屏幕 / 进出全屏时重算 */
 
-/* 退出全屏时解除横屏锁定 */
+/* 进出全屏：全屏时舞台放开铺满，退出后恢复 16:9 并解除横屏锁定 */
 document.addEventListener('fullscreenchange',function(){
-  if(!document.fullscreenElement&&screen.orientation&&screen.orientation.unlock){
-    try{screen.orientation.unlock();}catch(e){}
+  var stage=document.getElementById('stage');
+  if(document.fullscreenElement===stage){
+    stage.style.width=stage.style.height=stage.style.flex='';
+    stage.style.marginLeft=stage.style.marginRight=stage.style.marginTop=stage.style.marginBottom='';
+    fitDycrop();
+  }else{
+    fitStage();fitDycrop();
+    if(screen.orientation&&screen.orientation.unlock){try{screen.orientation.unlock();}catch(e){}}
   }
 });
 

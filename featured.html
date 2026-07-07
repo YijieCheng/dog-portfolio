@@ -90,6 +90,14 @@
     .fe-grid,.fe-tile .in{animation:none;opacity:1;}
   }
 
+  /* ── 页面转场：暗色底 ↔ 蓝色画布互相衔接 ── */
+  .page-veil{position:fixed;inset:0;z-index:500;background:#08080a;pointer-events:none;}
+  .page-veil.in{animation:veilOut .55s ease .05s forwards;}          /* 进场：暗底淡出露出蓝 */
+  .page-veil.out{opacity:0;animation:veilIn .18s ease-out forwards;} /* 离场：快速压暗（出比进快）*/
+  @keyframes veilOut{to{opacity:0;visibility:hidden;}}
+  @keyframes veilIn{to{opacity:1;}}
+  @media (prefers-reduced-motion:reduce){.page-veil{display:none;}}
+
   /* ── 移动端 ── */
   @media(max-width:720px){
     .fe-corner{display:none;}                       /* 角标与居中提示会相互挤压 */
@@ -104,6 +112,8 @@
 </style>
 </head>
 <body>
+
+<div class="page-veil in" id="veil" aria-hidden="true"></div>
 
 <header class="site-header">
   <div class="logo"><a href="index.html" data-hover>ARCHIVE<span class="dot-accent">.</span></a></div>
@@ -148,6 +158,22 @@ var TEXTS=[
   {t:'SEE OUR WORK\nIN ACTION',s:'',bg:'#0e1a5e',fg:'#9db4ff'},
   {t:'影像·创意·叙事',s:'Visual Storytelling',bg:'#f3ece1',fg:'#1d44c7'}
 ];
+
+/* ── 离场转场：先压暗再跳转（180ms，与 veilIn 同步）── */
+var _veil=document.getElementById('veil');
+function veilNav(href){
+  if(!_veil||matchMedia('(prefers-reduced-motion:reduce)').matches){location.href=href;return;}
+  _veil.classList.remove('in');_veil.classList.add('out');
+  setTimeout(function(){location.href=href;},180);
+}
+/* bfcache 返回本页时重播进场，避免残留暗屏 */
+addEventListener('pageshow',function(e){
+  if(e.persisted&&_veil){_veil.classList.remove('out');void _veil.offsetWidth;_veil.classList.add('in');}
+});
+/* header 导航也走转场 */
+document.querySelectorAll('.site-header a[href]').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();veilNav(a.getAttribute('href'));});
+});
 
 (function(){
   var grid=document.getElementById('feGrid');
@@ -259,7 +285,7 @@ var TEXTS=[
     if(moved<6){
       var el=document.elementFromPoint(e.clientX,e.clientY);
       while(el&&el!==feat){
-        if(el.classList&&el.classList.contains('fe-tile')&&el.tagName==='A'){location.href=el.getAttribute('href');return;}
+        if(el.classList&&el.classList.contains('fe-tile')&&el.tagName==='A'){veilNav(el.getAttribute('href'));return;}
         el=el.parentElement;
       }
     }
