@@ -1,1 +1,5 @@
 .DS_Store
+
+assets/_orig_backup/
+assets/about-bg.jpg
+assets/*.opt.mp4
