@@ -40,6 +40,8 @@
   .page-reveal{opacity:0;transition:opacity .6s ease .15s;}
   .page-reveal.show{opacity:1;}
   .hero-line:hover{letter-spacing:.06em;color:var(--accent);}
+  /* ── Hero 三行大标题：字号适配最长一行，保证不折行 ── */
+  .hero .h1{font-size:clamp(1.6rem,6.8vw,6rem);}
   .tag:hover{letter-spacing:.28em;color:var(--accent);border-color:rgba(168,130,255,.4);}
 
   /* ── 整屏吸附滚动（一屏一屏）── */
@@ -49,6 +51,14 @@
     scroll-snap-align:start;scroll-snap-stop:always;}
   .snap-screen.last > footer{margin-top:auto;}
   @media (prefers-reduced-motion:reduce){html{scroll-snap-type:none;}}
+
+  /* ── 移动端 ── */
+  @media(max-width:720px){
+    .hero .hero-text{padding-left:var(--gutter);}
+    .hero-sub{font-size:11px;letter-spacing:.18em;}
+    .hero .orb{right:-16%;top:56%;}
+    .hero .tags{margin-top:22px;}
+  }
 </style>
 </head>
 <body>
@@ -68,10 +78,10 @@
   <div class="logo">ARCHIVE<span class="dot-accent">.</span></div>
   <nav>
     <ul>
-      <li><a href="works.html#video" data-hover>Works</a></li>
-      <li><a href="#" data-hover>About</a></li>
-      <li><a href="#" data-hover>Journal</a></li>
-      <li><a href="#" data-hover>Contact</a></li>
+      <li><a href="works.html#photo" data-hover>摄影</a></li>
+      <li><a href="works.html#video" data-hover>摄像</a></li>
+      <li><a href="featured.html" data-hover>精选</a></li>
+      <li><a href="about.html" data-hover>关于我</a></li>
     </ul>
   </nav>
   <span class="menu-ico" data-hover>≡</span>
@@ -86,12 +96,10 @@
   <div class="orb" id="orb"></div>
   <div class="hero-text">
     <h1 class="h1">
-      <span class="hero-line" data-textline>WE</span>
-      <span class="hero-line" data-textline>CAPTURE</span>
-      <span class="hero-line" data-textline>STORIES</span>
-      <span class="hero-line" data-textline>THAT STAY</span>
+      <span class="hero-line" data-textline>HI, I'M CHUNYU</span>
+      <span class="hero-line" data-textline>VISUAL STORIES</span>
+      <span class="hero-line" data-textline>TOLD FRAME BY FRAME</span>
     </h1>
-    <div class="hero-sub">影像 · 创意 · 叙事 &nbsp;—&nbsp; Visual Storytelling Studio</div>
     <div class="tags">
       <span class="tag" data-hover data-type="photo">摄影作品</span>
       <span class="tag" data-hover data-type="video">摄像作品</span>
@@ -104,8 +112,14 @@
 <script src="data.js"></script>
 <script src="site.js"></script>
 <script>
+/* ════ 回访 / 减动效：跳过 loader ════
+   首次访问播完整 loader；同一会话内回访、或系统开了"减弱动态效果"时直接进页面 */
+var SKIP_LOADER=matchMedia('(prefers-reduced-motion:reduce)').matches;
+try{if(sessionStorage.getItem('archive-loader-seen')==='1')SKIP_LOADER=true;}catch(e){}
+
 /* ════ MATRIX CODE RAIN ════ */
 (function(){
+  if(SKIP_LOADER){window._stopRain=function(){};return;}
   var c=document.getElementById('rainCanvas'),ctx=c.getContext('2d');
   var chars='ARCHIVE影像创意叙事01{}[]<>=+-*/アイウエオカキクケコサシスセソ'.split('');
   var fs=11,step=fs*2.2,cols=0,drops=[];
@@ -136,6 +150,12 @@
 (function(){
   var el=document.getElementById('loaderPercent'),bar=document.getElementById('loaderBar'),
       loader=document.getElementById('loader'),page=document.getElementById('pageReveal');
+  if(SKIP_LOADER){
+    loader.style.transition='none';loader.classList.add('hide');
+    page.classList.add('show');
+    return;
+  }
+  try{sessionStorage.setItem('archive-loader-seen','1');}catch(e){}
   function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
   var start=Date.now(),dur=2400;
   (function tick(){

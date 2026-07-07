@@ -27,6 +27,16 @@
   .cat-hero .stage-wrap{position:relative;z-index:3;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     padding:12px 0 20px;}
   .cat-hero .stage{height:clamp(300px,44vh,480px);}
+
+  /* ── 移动端：标题区压缩，给轮播留高度 ── */
+  @media(max-width:720px){
+    .cat-hero-inner{padding-top:86px;}
+    .cat-hero .no{font-size:32px;}
+    .cat-hero .en{font-size:11px;letter-spacing:.22em;}
+    .cat-hero .desc{font-size:13px;margin-top:10px;line-height:1.6;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .cat-hero .stage{height:clamp(280px,40vh,380px);}
+  }
 </style>
 </head>
 <body>
@@ -34,10 +44,10 @@
 <header class="site-header">
   <div class="logo"><a href="index.html" data-hover>ARCHIVE<span class="dot-accent">.</span></a></div>
   <nav><ul>
-    <li><a id="navWorks" href="works.html#video" data-hover>Works</a></li>
-    <li><a href="#" data-hover>About</a></li>
-    <li><a href="#" data-hover>Journal</a></li>
-    <li><a href="index.html" data-hover>← Home</a></li>
+    <li><a href="works.html#photo" data-hover>摄影</a></li>
+    <li><a id="navWorks" href="works.html#video" data-hover>摄像</a></li>
+    <li><a href="featured.html" data-hover>精选</a></li>
+    <li><a href="about.html" data-hover>关于我</a></li>
   </ul></nav>
   <span class="menu-ico" data-hover>≡</span>
 </header>
@@ -66,7 +76,6 @@ function render(key){
   document.getElementById('catCn').textContent=c.cn;
   document.getElementById('catEn').textContent=c.en;
   document.getElementById('catDesc').textContent=c.desc;
-  document.getElementById('navWorks').href='works.html#'+c.group;
   var isPhoto=c.group==='photo';
 
   // 该分类作品 → 3D 旋转 + coverflow 轮播（摄影/摄像共用）

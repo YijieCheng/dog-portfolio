@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关于我 — 文旅影像作品集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<style>
+  html,body{height:100%;overflow:hidden;}
+  .about{position:relative;height:100dvh;overflow:hidden;background:var(--bg);}
+
+  /* ── 背景：紫调黄昏建筑（assets/about-bg.png；缺图时退回渐变底）──
+     inset 外扩 16px：给鼠标视差留位移余量，平移时不露边 */
+  .ab-bg{position:absolute;inset:-16px;z-index:0;will-change:transform;
+    background:radial-gradient(120% 100% at 70% 20%,#3d2f8a 0%,#241a55 45%,#0c0a1e 100%);}
+  .ab-bg img{width:100%;height:100%;object-fit:cover;object-position:center;
+    opacity:0;animation:bgIn 1.6s ease forwards;}
+  @keyframes bgIn{from{opacity:0;transform:scale(1.045);}to{opacity:1;transform:scale(1);}}
+  .ab-bg::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,rgba(8,8,14,.42),transparent 46%),
+               linear-gradient(to bottom,rgba(8,8,14,.3),transparent 26%,rgba(8,8,14,.28) 100%);}
+
+  /* ── 左侧信息卡 ── */
+  .ab-card{position:absolute;z-index:3;left:clamp(24px,3.2vw,56px);top:clamp(84px,11vh,110px);bottom:clamp(28px,4.5vh,56px);
+    width:min(440px,38vw);border-radius:34px;
+    background:rgba(11,11,22,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:0 40px 90px rgba(4,4,16,.55);
+    padding:clamp(30px,4.6vh,52px) clamp(28px,2.6vw,48px);
+    display:flex;flex-direction:column;justify-content:center;gap:0;
+    opacity:0;animation:cardIn .9s cubic-bezier(.16,1,.3,1) .15s forwards;}
+  @keyframes cardIn{from{opacity:0;transform:translateX(-36px);}to{opacity:1;transform:none;}}
+  /* 入场结束后解除 animation fill，让视差的 transform 能接管（JS 加 .settled）*/
+  .ab-card.settled{animation:none;opacity:1;}
+
+  /* 卡内元素：错峰入场（复用 system.css 的 fadeSlideUp）*/
+  .ab-card .st{opacity:0;animation:fadeSlideUp .8s cubic-bezier(.16,1,.3,1) forwards;}
+  .ab-card .st:nth-child(1){animation-delay:.22s;}
+  .ab-card .st:nth-child(2){animation-delay:.32s;}
+  .ab-card .st:nth-child(3){animation-delay:.42s;}
+
+  .ab-title{font-weight:900;text-transform:uppercase;letter-spacing:-.03em;line-height:.94;
+    font-size:clamp(2.6rem,3.8vw,4rem);}
+  .ab-title .us{display:block;
+    background:linear-gradient(120deg,#7c4dff,#a882ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+
+  .ab-cn{margin-top:26px;font-size:19px;font-weight:700;letter-spacing:.04em;}
+  .ab-cn::after{content:"";display:block;width:30px;height:3px;border-radius:2px;margin-top:12px;
+    background:linear-gradient(90deg,#7c4dff,#a882ff);}
+
+  .ab-desc{margin-top:22px;font-size:14px;line-height:2.1;color:rgba(255,255,255,.66);}
+
+  /* 联系条目：逐条错峰入场（比整块一起浮现更有节奏）*/
+  .ab-rows{margin-top:clamp(20px,3.6vh,38px);display:flex;flex-direction:column;gap:clamp(12px,2.2vh,22px);}
+  .ab-row{display:flex;align-items:center;gap:16px;color:var(--text);
+    opacity:0;animation:fadeSlideUp .7s cubic-bezier(.16,1,.3,1) forwards;
+    transition:transform .25s cubic-bezier(.23,1,.32,1);}
+  .ab-row:nth-child(1){animation-delay:.54s;}
+  .ab-row:nth-child(2){animation-delay:.64s;}
+  .ab-row:nth-child(3){animation-delay:.74s;}
+  /* 入场结束后解除 fill，hover/按压的 transform 才能生效（JS 加 .anim-done）*/
+  .ab-row.anim-done{animation:none;opacity:1;}
+  .ab-row:hover{transform:translateX(4px);}
+  a.ab-row:active{transform:scale(.97);}
+  .ab-row .ic{flex:none;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#6c30d2,#7c4dff);
+    box-shadow:0 8px 22px rgba(108,48,210,.4);
+    transition:box-shadow .3s ease,transform .22s cubic-bezier(.23,1,.32,1);}
+  .ab-row:hover .ic{box-shadow:0 10px 28px rgba(124,77,255,.55);transform:scale(1.07);}
+  .ab-row .ic svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .ab-row .tx{font-size:15px;font-weight:600;letter-spacing:.02em;}
+
+  /* ── 右下角 slogan ── */
+  .ab-slogan{position:absolute;z-index:3;right:clamp(24px,3.2vw,56px);bottom:clamp(24px,4vh,44px);
+    text-align:right;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    font-size:clamp(13px,1.3vw,19px);line-height:1.55;color:#8a70e8;
+    opacity:0;animation:fadeSlideUp .9s cubic-bezier(.16,1,.3,1) .8s forwards;}
+  .ab-slogan .bdot{display:inline-block;width:.62em;height:.62em;border-radius:50%;
+    background:#7c4dff;margin-left:.5em;vertical-align:baseline;}
+
+  /* ── 移动端：卡片满宽、slogan 让位 ── */
+  @media(max-width:720px){
+    .ab-card{left:14px;right:14px;top:82px;bottom:auto;width:auto;max-height:calc(100dvh - 96px);
+      border-radius:24px;padding:28px 24px;overflow-y:auto;}
+    .ab-title{font-size:2.4rem;}
+    .ab-desc{font-size:13px;line-height:1.9;}
+    .ab-row .ic{width:40px;height:40px;}
+    .ab-row .ic svg{width:18px;height:18px;}
+    .ab-slogan{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .ab-bg img,.ab-card,.ab-card .st,.ab-row,.ab-slogan{animation:none;opacity:1;transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo"><a href="index.html" data-hover>ARCHIVE<span class="dot-accent">.</span></a></div>
+  <nav><ul>
+    <li><a href="works.html#photo" data-hover>摄影</a></li>
+    <li><a href="works.html#video" data-hover>摄像</a></li>
+    <li><a href="featured.html" data-hover>精选</a></li>
+    <li><a href="about.html" data-hover style="color:var(--text);">关于我</a></li>
+  </ul></nav>
+  <span class="menu-ico" data-hover>≡</span>
+</header>
+
+<section class="about">
+  <div class="ab-bg" id="abBg"><img data-fallback src="assets/about-bg.png" alt=""></div>
+
+  <div class="ab-card" id="abCard">
+    <h1 class="ab-title st">About<span class="us">Me</span></h1>
+
+    <div class="ab-cn st">关于我</div>
+
+    <p class="ab-desc st">宁波市会展旅业有限公司创意设计中心。<br>
+      致力于为客户提供专业的创意设计与品牌视觉服务。<br>
+      我们相信，好的设计能够连接人心，传递价值。</p>
+
+    <div class="ab-rows">
+      <div class="ab-row" data-hover>
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16"/><path d="M15 9h4a1 1 0 0 1 1 1v11"/><path d="M2 21h20"/><path d="M7.5 8h1M7.5 12h1M7.5 16h1M11 8h1M11 12h1M11 16h1"/></svg></span>
+        <span class="tx">宁波市会展旅业有限公司</span>
+      </div>
+      <div class="ab-row" data-hover>
+        <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.4 3.6-5.5 7-5.5s6.2 2.1 7 5.5"/></svg></span>
+        <span class="tx">创意设计中心</span>
+      </div>
+      <a class="ab-row" href="tel:0574-87559494" data-hover>
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M6.8 3.5h2.9l1.4 4.1-2 1.5a12.5 12.5 0 0 0 5.8 5.8l1.5-2 4.1 1.4v2.9a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.8 5.7a2 2 0 0 1 2-2.2Z"/></svg></span>
+        <span class="tx">0574-87559494</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="ab-slogan">Connecting Ideas<br>Creating Impact<span class="bdot"></span></div>
+</section>
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script>
+attachImgFallback();
+
+/* 入场动画结束后解除 animation fill：
+   否则 forwards 会一直霸占 transform，hover/视差都不生效 */
+var abCard=document.getElementById('abCard');
+abCard.addEventListener('animationend',function(e){
+  if(e.target===abCard)abCard.classList.add('settled');
+});
+document.querySelectorAll('.ab-row').forEach(function(r){
+  r.addEventListener('animationend',function(e){
+    if(e.target===r)r.classList.add('anim-done');
+  });
+});
+
+/* ── 轻视差：背景反向漂移、卡片同向微移，制造前后景深度 ──
+   连续值一律 rAF + lerp（不用 CSS transition 追手），只动 transform */
+(function(){
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  var bg=document.getElementById('abBg');
+  var tx=0,ty=0,cx=0,cy=0;
+  addEventListener('mousemove',function(e){
+    tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5;
+  },{passive:true});
+  (function loop(){
+    cx+=(tx-cx)*0.05;cy+=(ty-cy)*0.05;
+    bg.style.transform='translate3d('+(-cx*14).toFixed(2)+'px,'+(-cy*10).toFixed(2)+'px,0)';
+    if(abCard.classList.contains('settled'))
+      abCard.style.transform='translate3d('+(cx*5).toFixed(2)+'px,'+(cy*4).toFixed(2)+'px,0)';
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>

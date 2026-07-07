@@ -16,11 +16,14 @@ function attachImgFallback(root){
 function initCursor(){
   if(!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
   const ring=document.createElement('div'); ring.className='cursor-ring';
-  const dot=document.createElement('div');  dot.className='cursor-dot';
-  document.body.appendChild(ring); document.body.appendChild(dot);
+  document.body.appendChild(ring);
 
-  let mx=innerWidth/2,my=innerHeight/2, rx=mx,ry=my, dx=mx,dy=my;
-  window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;},{passive:true});
+  let mx=innerWidth/2,my=innerHeight/2;
+  // 直接跟随，无缓动延迟；仅用 transform 定位（合成层，跟手）
+  window.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    ring.style.transform='translate(-50%,-50%) translate3d('+mx+'px,'+my+'px,0)';
+  },{passive:true});
 
   function hoverable(el){
     let n=el;
@@ -32,10 +35,6 @@ function initCursor(){
     return false;
   }
   (function loop(){
-    rx+=(mx-rx)*0.18; ry+=(my-ry)*0.18;
-    dx+=(mx-dx)*0.40; dy+=(my-dy)*0.40;
-    ring.style.left=rx+'px'; ring.style.top=ry+'px';
-    dot.style.left=dx+'px';  dot.style.top=dy+'px';
     if(!window._cursorGrab){
       const el=document.elementFromPoint(mx,my);
       ring.classList.toggle('expand', !!(el&&hoverable(el)));
@@ -48,8 +47,19 @@ function initCursor(){
     ring.classList.toggle('grab',on);
     if(on) ring.classList.remove('expand');
   };
-  document.addEventListener('mouseleave',()=>{ring.style.opacity='0';dot.style.opacity='0';});
-  document.addEventListener('mouseenter',()=>{ring.style.opacity='1';dot.style.opacity='1';});
+  document.addEventListener('mouseleave',()=>{ring.style.opacity='0';});
+  document.addEventListener('mouseenter',()=>{ring.style.opacity='1';});
+
+  /* iframe/video 会吞掉 mousemove，自定义光标会卡在边缘：
+     进入时隐藏自定义光标（恢复原生），离开时再显示。
+     capture 阶段监听，动态插入的播放器也能覆盖。 */
+  function isMedia(t){return t&&(t.tagName==='IFRAME'||t.tagName==='VIDEO');}
+  document.addEventListener('mouseenter',e=>{
+    if(isMedia(e.target)){ring.classList.add('hide');}
+  },true);
+  document.addEventListener('mouseleave',e=>{
+    if(isMedia(e.target)){ring.classList.remove('hide');}
+  },true);
 }
 
 /* ---------- 辉光球：紫 → 粉 平滑 morph（lerp 0.04/帧）---------- */
@@ -75,6 +85,37 @@ function initOrb(orb){
     const dx=e.clientX-cx, dy=e.clientY-cy;
     orb._target=(dx*dx+dy*dy<rad*rad)?1:0;
   },{passive:true});
+}
+
+/* ---------- Mobile menu：≡ 打开全屏覆层，导航项自 header 克隆 ---------- */
+function initMobileMenu(){
+  const header=document.querySelector('.site-header'); if(!header) return;
+  const ico=header.querySelector('.menu-ico'); if(!ico) return;
+  const links=[...header.querySelectorAll('nav a')];
+  const page=location.pathname.split('/').pop()||'index.html';
+
+  const ov=document.createElement('div');
+  ov.className='m-menu';
+  ov.setAttribute('aria-hidden','true');
+  ov.innerHTML=
+    '<div class="m-top"><span class="m-logo">ARCHIVE<span class="dot-accent">.</span></span>'+
+    '<button class="m-close" aria-label="关闭菜单">✕</button></div>'+
+    '<nav class="m-nav">'+links.map((a,i)=>{
+      const href=a.getAttribute('href');
+      const now=href.split('#')[0]===page?' class="now"':'';
+      return '<a href="'+href+'"'+now+' style="transition-delay:'+(60+i*50)+'ms">'+a.textContent+'</a>';
+    }).join('')+'</nav>'+
+    '<div class="m-foot">© 2026 Archive Studio · 文旅影像</div>';
+  document.body.appendChild(ov);
+
+  function open(){ov.classList.add('open');ov.setAttribute('aria-hidden','false');
+    document.documentElement.classList.add('menu-lock');}
+  function close(){ov.classList.remove('open');ov.setAttribute('aria-hidden','true');
+    document.documentElement.classList.remove('menu-lock');}
+  ico.addEventListener('click',open);
+  ov.querySelector('.m-close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target.tagName==='A')close();}); // 同页 hash 跳转也要收起
+  addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 }
 
 /* ---------- sticky header：下滚隐藏，上滚显示，越过首屏加底 ---------- */
@@ -114,8 +155,11 @@ function initCoverflow(opts){
   var track=opts.stage.querySelector('.track')||opts.track,
       stage=opts.stage, items=opts.items||[];
   if(!stage||!track) return;
-  var CFG={SPREAD:300,DEPTH:200,ANGLE:34,SCALE_FALL:0.13,LIFT:16,FADE:0.30,
-           AUTO:0.0032,DRAG_K:0.0042,INERTIA:0.92,HOVER_SCALE:0.10,HOVER_LERP:0.10};
+  /* 小屏收紧展开距离/加快侧卡衰减，拖拽增益按手指行程调高 */
+  var mob=matchMedia('(max-width:720px)').matches;
+  var CFG={SPREAD:mob?180:300,DEPTH:mob?150:200,ANGLE:mob?30:34,SCALE_FALL:mob?0.16:0.13,
+           LIFT:mob?12:16,FADE:mob?0.38:0.30,
+           AUTO:0.0032,DRAG_K:mob?0.0060:0.0042,INERTIA:0.92,HOVER_SCALE:0.10,HOVER_LERP:0.10};
   var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 
   var cards=items.map(function(it,i){
@@ -170,7 +214,8 @@ function initCoverflow(opts){
       var tx=o*CFG.SPREAD, tz=-a*CFG.DEPTH+c.hover*60, ty=a*CFG.LIFT,
           ry=Math.max(-55,Math.min(55,-o*CFG.ANGLE)),
           sc=Math.max(0.55,1-a*CFG.SCALE_FALL)+c.hover*CFG.HOVER_SCALE,
-          op=Math.max(0.12,1-a*CFG.FADE)+c.hover*0.3;
+          edgeFade=Math.max(0,Math.min(1,(N/2-a)/0.75)),
+          op=(Math.max(0.12,1-a*CFG.FADE)+c.hover*0.3)*edgeFade;
       var ang=(i-posEff)/N*Math.PI*2;
       var rtx=Math.sin(ang)*RX, rty=-Math.cos(ang)*RY, rsc=0.7;
       var rop=fadeIn*(0.45+0.55*((Math.cos(ang)+1)/2));
@@ -215,5 +260,5 @@ function initCoverflow(opts){
   });
 }
 
-function initSite(){ initCursor(); initHeader(); initReveal(); attachImgFallback(); }
+function initSite(){ initCursor(); initHeader(); initReveal(); initMobileMenu(); attachImgFallback(); }
 document.addEventListener('DOMContentLoaded',initSite);
