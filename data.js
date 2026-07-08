@@ -21,8 +21,7 @@ const CATS = {
     group:"video", no:"01", key:"creative", cn:"创意宣传", en:"CREATIVE CAMPAIGN", cover:"city,architecture,china",
     desc:"以电影化的叙事和视听语言，为城市、景区与品牌打造有温度、有记忆点的创意宣传片。",
     projects:[
-      {id:"ningbo-city", cn:"宁波城市宣传片", en:"NINGBO CITY PROMO", dur:"03:20", year:"2026", type:"城市宣传片", client:"宁波文旅集团", location:"宁波", kw:"city,skyline,river", qq:"l3285zcdsx3",
-        video:"https://aaron-video-1387273792.cos.ap-shanghai.myqcloud.com/%E6%9C%89%E7%A5%A8%E5%B0%B1GO%E4%BA%86%20%E6%A0%87%E8%AF%86%EF%BC%884K%EF%BC%89.mp4",
+      {id:"ningbo-city", cn:"宁波城市宣传片", en:"NINGBO CITY PROMO", dur:"03:20", year:"2026", type:"城市宣传片", client:"宁波文旅集团", location:"宁波", kw:"city,skyline,river", feicut:"https://www.feicut.com/fv/FVzqiuftoy35?cm=3&fc=1&p=0",
         context:"以城市为主角，人文为线索。我们用航拍、延时与人物特写，展现宁波从三江口的晨曦到老外滩夜色的一天。",
         concept:"用一条片子讲清楚一座城的过去、现在与向往，让看的人想要立刻出发。",
         results:[["8M+","全网曝光量"],["200+","媒体报道"],["35+","平台推荐"],["15W+","互动数据"]]},

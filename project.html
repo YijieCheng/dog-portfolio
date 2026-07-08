@@ -201,7 +201,10 @@ function render(route){
       return;
     }
     stage.classList.add('is-playing');
-    if(p.bilibili){
+    if(p.feicut){
+      /* 飞咔：官方分享链接，支持站内 iframe 内嵌 */
+      mediaWrap.innerHTML='<iframe src="'+p.feicut+'" scrolling="no" frameborder="0" allow="autoplay; fullscreen" allowfullscreen="true"></iframe>';
+    }else if(p.bilibili){
       mediaWrap.innerHTML='<iframe src="https://player.bilibili.com/player.html?bvid='+p.bilibili+'&page=1&high_quality=1&danmaku=0&autoplay=1" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>';
     }else if(p.qq){
       mediaWrap.innerHTML='<iframe src="https://v.qq.com/txp/iframe/player.html?vid='+p.qq+'&auto=1&defn=shd" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>';
@@ -230,7 +233,7 @@ function render(route){
     fsBtn.onclick=function(){
       if(!stage.classList.contains('is-playing'))playVideo();
       function openExternal(){
-        var url=p.video||null;
+        var url=p.video||p.feicut||null;
         if(p.bilibili)url='https://player.bilibili.com/player.html?bvid='+p.bilibili+'&page=1&high_quality=1&danmaku=0&autoplay=1';
         else if(p.qq)url='https://v.qq.com/txp/iframe/player.html?vid='+p.qq+'&auto=1&defn=shd';
         else if(p.douyin)url='https://open.douyin.com/player/video?vid='+p.douyin+'&autoplay=1';
